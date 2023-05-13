@@ -20,7 +20,7 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.AZURE_USERNAME }}:${{ secrets.AZURE_PASSWORD }}
 
       - name: Configure kubectl
         uses: Azure/k8s-set-context@v1
