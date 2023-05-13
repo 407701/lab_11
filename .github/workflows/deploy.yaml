@@ -1,0 +1,41 @@
+name: Deploy to AKS
+
+on:
+  push:
+    branches: [main]
+
+env:
+  DOCKER_HUB_REPO: <nazwa_repozytorium>
+  K8S_DEPLOYMENT_NAME: nginx-deployment
+  K8S_NAMESPACE: test_namespace
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Configure kubectl
+        uses: Azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+          context: ${{ secrets.KUBE_CONTEXT }}
+
+      - name: Set kubectl namespace
+        run: kubectl config set-context --current --namespace=$K8S_NAMESPACE
+
+      - name: Update image in deployment
+        run: |
+          kubectl set image deployment/$K8S_DEPLOYMENT_NAME $K8S_DEPLOYMENT_NAME=$DOCKER_HUB_REPO:latest
+
+      - name: Rollout status
+        run: |
+          kubectl rollout status deployment/$K8S_DEPLOYMENT_NAME
